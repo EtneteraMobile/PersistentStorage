@@ -6,12 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1]
+
+### Changed
+- Changed type of returned value from optional type to non-optional for read methods. Marked methods with optional return type as deprecated.
+
 ## [1.0.0]
 
 ### Added
-
 - Created first version of persistent storage framework
 
 ### Changed
-
 - SPM Support
