@@ -187,7 +187,7 @@ public final class PersistentStorage {
         valueKey: String
     ) -> AnyPublisher<T?, PersistentStorageError> {
         do {
-            let persistedValue = try getPersistedValue(
+            let persistedValue = try getPersistedOptionalValue(
                 valueType: valueType,
                 valueKey: valueKey
             )
@@ -221,10 +221,39 @@ public final class PersistentStorage {
         valueType: T.Type,
         valueKey: String
     ) throws -> T? {
-        try getPersistedValue(
+        try getPersistedOptionalValue(
             valueType: valueType,
             valueKey: valueKey
         )
+    }
+
+    /// TODO
+    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
+    private func getPersistedOptionalValue<T>(
+        valueType: T.Type,
+        valueKey: String
+    ) throws -> T? {
+        guard let persistedValue = userDefaults.value(forKey: valueKey) as? T else {
+            if userDefaults.value(forKey: valueKey) != nil {
+                log(
+                    message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
+                    for: .failure
+                )
+                throw PersistentStorageError.noValueFoundWithGivenType
+            } else {
+                log(
+                    message: "ℹ️ Value with given key does not exist, returning nil.",
+                    for: .failure
+                )
+                return nil
+            }
+        }
+        log(
+            // swiftlint:disable:next line_length
+            message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
+            for: .debug
+        )
+        return persistedValue
     }
 
     // MARK: - Private methods
