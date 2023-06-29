@@ -62,24 +62,132 @@ public final class PersistentStorage {
         return Just(true).eraseToAnyPublisher()
     }
 
-    /// TODO
+    /// Method for reading a value with given key and type.
+    ///
+    /// - Possible failures:
+    ///     - If type resolution with given parameter `valueType` fails, method will return `noValueFoundWithGivenType` failure.
+    ///     - If no value is associated with key given in parameter `valueKey` or its value is nil, the method will return `noValueFound` failure.
+    ///
+    /// - Parameters:
+    ///     - valueType: The type of value that you wish to read.
+    ///     - valueKey: Key that is assigned to a value that you wish to read.
     public func read<T>(
         valueType: T.Type,
         valueKey: String
-    ) throws -> T? {
+    ) throws -> T {
         try getPersistedValue(
             valueType: valueType,
             valueKey: valueKey
         )
     }
 
-    /// TODO
+    /// Method for reading a value with given key and type. Result is returned as a publisher.
+    ///
+    /// - Possible failures:
+    ///     - If type resolution with given parameter `valueType` fails, method will return `noValueFoundWithGivenType` failure.
+    ///     - If no value is associated with key given in parameter `valueKey` or its value is nil, the method will return `noValueFound` failure.
+    ///
+    /// - Parameters:
+    ///     - valueType: The type of value that you wish to read.
+    ///     - valueKey: Key that is assigned to a value that you wish to read.
+    public func readWithPublisher<T>(
+        valueType: T.Type,
+        valueKey: String
+    ) -> AnyPublisher<T, PersistentStorageError> {
+        do {
+            let persistedValue = try getPersistedValue(
+                valueType: valueType,
+                valueKey: valueKey
+            )
+            return Just(
+                persistedValue
+            )
+            .setFailureType(to: PersistentStorageError.self)
+            .eraseToAnyPublisher()
+        } catch {
+            guard let error = error as? PersistentStorageError else {
+                return Fail(
+                    error: PersistentStorageError.undefined
+                ).eraseToAnyPublisher()
+            }
+            return Fail(
+                error: error
+            )
+            .eraseToAnyPublisher()
+        }
+    }
+
+    /// Method for observing a value with given user defaults `KeyPath`.
+    ///
+    /// - Possible failures:
+    ///     - If no value is associated with key given in parameter `valueKey` or its value is nil, the method will return `noValueFound` failure.
+    ///
+    /// - Parameters:
+    ///     - keyPath: Specified key represented by user defaults `KeyPath` value.
+    public func observe<T>(
+        keyPath: KeyPath<UserDefaults, T?>
+    ) -> AnyPublisher<T, PersistentStorageError> {
+        userDefaults
+            .publisher(for: keyPath)
+            .handleEvents(
+                receiveOutput: { [weak self] value in
+                    self?.log(
+                        message: "✅ Observing value {\(String(describing: value))}.",
+                        for: .debug
+                    )
+                }
+            )
+            .flatMap { observedValue -> AnyPublisher<T, PersistentStorageError> in
+                guard let observedValue else {
+                    return Fail(error: .noValueFound).eraseToAnyPublisher()
+                }
+                return Just(observedValue)
+                    .setFailureType(to: PersistentStorageError.self)
+                    .eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+
+
+
+    // MARK: - Deprecated methods
+
+    /// Method for observing a value with given user defaults `KeyPath`.
+    ///
+    /// - Parameters:
+    ///     - keyPath: Specified key represented by user defaults `KeyPath` value.
+    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
+    public func observe<T>(
+        keyPath: KeyPath<UserDefaults, T?>
+    ) -> AnyPublisher<T?, Never> {
+        userDefaults
+            .publisher(for: keyPath)
+            .handleEvents(
+                receiveOutput: { [weak self] value in
+                    self?.log(
+                        message: "✅ Observing value {\(String(describing: value))}.",
+                        for: .debug
+                    )
+                }
+            )
+            .eraseToAnyPublisher()
+    }
+
+    /// Method for reading a value with given key and type. Result is returned as a publisher.
+    ///
+    /// - Possible failures:
+    ///     - If type resolution with given parameter `valueType` fails, method will return `noValueFoundWithGivenType` failure.
+    ///
+    /// - Parameters:
+    ///     - valueType: The type of value that you wish to read.
+    ///     - valueKey: Key that is assigned to a value that you wish to read.
+    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
     public func readWithPublisher<T>(
         valueType: T.Type,
         valueKey: String
     ) -> AnyPublisher<T?, PersistentStorageError> {
         do {
-            let persistedValue = try getPersistedValue(
+            let persistedValue = try getPersistedOptionalValue(
                 valueType: valueType,
                 valueKey: valueKey
             )
@@ -100,26 +208,28 @@ public final class PersistentStorage {
         }
     }
 
-    /// TODO
-    public func observe<T>(
-        keyPath: KeyPath<UserDefaults, T?>
-    ) -> AnyPublisher<T?, Never> {
-        userDefaults.publisher(
-            for: keyPath
+    /// Method for reading a value with given key and type.
+    ///
+    /// - Possible failures:
+    ///     - If type resolution with given parameter `valueType` fails, method will return `noValueFoundWithGivenType` failure.
+    ///
+    /// - Parameters:
+    ///     - valueType: The type of value that you wish to read.
+    ///     - valueKey: Key that is assigned to a value that you wish to read.
+    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
+    public func read<T>(
+        valueType: T.Type,
+        valueKey: String
+    ) throws -> T? {
+        try getPersistedOptionalValue(
+            valueType: valueType,
+            valueKey: valueKey
         )
-        .handleEvents(
-            receiveOutput: { [weak self] value in
-                self?.log(
-                    message: "✅ Observing value {\(String(describing: value))}.",
-                    for: .debug
-                )
-            }
-        )
-        .eraseToAnyPublisher()
     }
 
     /// TODO
-    private func getPersistedValue<T>(
+    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
+    private func getPersistedOptionalValue<T>(
         valueType: T.Type,
         valueKey: String
     ) throws -> T? {
@@ -136,6 +246,36 @@ public final class PersistentStorage {
                     for: .failure
                 )
                 return nil
+            }
+        }
+        log(
+            // swiftlint:disable:next line_length
+            message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
+            for: .debug
+        )
+        return persistedValue
+    }
+
+    // MARK: - Private methods
+
+    /// TODO
+    private func getPersistedValue<T>(
+        valueType: T.Type,
+        valueKey: String
+    ) throws -> T {
+        guard let persistedValue = userDefaults.value(forKey: valueKey) as? T else {
+            if userDefaults.value(forKey: valueKey) != nil {
+                log(
+                    message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
+                    for: .failure
+                )
+                throw PersistentStorageError.noValueFoundWithGivenType
+            } else {
+                log(
+                    message: "ℹ️ Value with given key does not exist, returning `noValueFound` failure.",
+                    for: .failure
+                )
+                throw PersistentStorageError.noValueFound
             }
         }
         log(
