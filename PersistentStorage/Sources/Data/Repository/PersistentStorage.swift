@@ -3,9 +3,9 @@ import Combine
 
 /// The `PersistentStorage` class wraps apple native `UserDefaults` class and  provides a custom
 /// programmatic interface for complex accessing user defaults database.
-public final class PersistentStorage {
+public class PersistentStorage {
 
-    private let userDefaults = UserDefaults.standard
+    let userDefaults = UserDefaults.standard
     private let logConfiguration: LogConfiguration
 
     /// Initialization of `PersistentStorage`
@@ -25,7 +25,7 @@ public final class PersistentStorage {
     @discardableResult public func store<T>(
         _ value: T?,
         for key: String
-    ) -> AnyPublisher<Bool, Never> {
+    ) -> AnyPublisher<Void, PersistentStorageError> {
         if let persistedValue = userDefaults.value(forKey: key) as? T {
             log(
                 message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} while persisting",
@@ -42,14 +42,19 @@ public final class PersistentStorage {
             forKey: key
         )
         // This operation is always successful
-        return Just(true).eraseToAnyPublisher()
+        return Just(())
+            .setFailureType(to: PersistentStorageError.self)
+            .eraseToAnyPublisher()
     }
 
-    /// TODO
+    /// Method for removing a value with assigned key from the user defaults storage.
+    ///
+    /// - Parameters:
+    ///     - key: Key that will be assigned to value
     @discardableResult
     public func remove(
         valueKey: String
-    ) -> AnyPublisher<Bool, Never> {
+    ) -> AnyPublisher<Void, PersistentStorageError> {
         userDefaults.set(
             nil,
             forKey: valueKey
@@ -59,7 +64,9 @@ public final class PersistentStorage {
             for: .debug
         )
         // This operation is always successful
-        return Just(true).eraseToAnyPublisher()
+        return Just(())
+            .setFailureType(to: PersistentStorageError.self)
+            .eraseToAnyPublisher()
     }
 
     /// Method for reading a value with given key and type.
@@ -148,118 +155,10 @@ public final class PersistentStorage {
             .eraseToAnyPublisher()
     }
 
-
-
-    // MARK: - Deprecated methods
-
-    /// Method for observing a value with given user defaults `KeyPath`.
-    ///
-    /// - Parameters:
-    ///     - keyPath: Specified key represented by user defaults `KeyPath` value.
-    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
-    public func observe<T>(
-        keyPath: KeyPath<UserDefaults, T?>
-    ) -> AnyPublisher<T?, Never> {
-        userDefaults
-            .publisher(for: keyPath)
-            .handleEvents(
-                receiveOutput: { [weak self] value in
-                    self?.log(
-                        message: "✅ Observing value {\(String(describing: value))}.",
-                        for: .debug
-                    )
-                }
-            )
-            .eraseToAnyPublisher()
-    }
-
-    /// Method for reading a value with given key and type. Result is returned as a publisher.
-    ///
-    /// - Possible failures:
-    ///     - If type resolution with given parameter `valueType` fails, method will return `noValueFoundWithGivenType` failure.
-    ///
-    /// - Parameters:
-    ///     - valueType: The type of value that you wish to read.
-    ///     - valueKey: Key that is assigned to a value that you wish to read.
-    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
-    public func readWithPublisher<T>(
-        valueType: T.Type,
-        valueKey: String
-    ) -> AnyPublisher<T?, PersistentStorageError> {
-        do {
-            let persistedValue = try getPersistedOptionalValue(
-                valueType: valueType,
-                valueKey: valueKey
-            )
-            return Just(
-                persistedValue
-            )
-            .setFailureType(to: PersistentStorageError.self)
-            .eraseToAnyPublisher()
-        } catch {
-            guard let error = error as? PersistentStorageError else {
-                return Fail(
-                    error: PersistentStorageError.undefined
-                ).eraseToAnyPublisher()
-            }
-            return Fail(
-                error: error
-            ).eraseToAnyPublisher()
-        }
-    }
-
-    /// Method for reading a value with given key and type.
-    ///
-    /// - Possible failures:
-    ///     - If type resolution with given parameter `valueType` fails, method will return `noValueFoundWithGivenType` failure.
-    ///
-    /// - Parameters:
-    ///     - valueType: The type of value that you wish to read.
-    ///     - valueKey: Key that is assigned to a value that you wish to read.
-    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
-    public func read<T>(
-        valueType: T.Type,
-        valueKey: String
-    ) throws -> T? {
-        try getPersistedOptionalValue(
-            valueType: valueType,
-            valueKey: valueKey
-        )
-    }
+    // MARK: - Internal methods
 
     /// TODO
-    @available(*, deprecated, message: "Use updated version of this method with non-optional return type")
-    private func getPersistedOptionalValue<T>(
-        valueType: T.Type,
-        valueKey: String
-    ) throws -> T? {
-        guard let persistedValue = userDefaults.value(forKey: valueKey) as? T else {
-            if userDefaults.value(forKey: valueKey) != nil {
-                log(
-                    message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
-                    for: .failure
-                )
-                throw PersistentStorageError.noValueFoundWithGivenType
-            } else {
-                log(
-                    message: "ℹ️ Value with given key does not exist, returning nil.",
-                    for: .failure
-                )
-                return nil
-            }
-        }
-        log(
-            // swiftlint:disable:next line_length
-            message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
-            for: .debug
-        )
-        return persistedValue
-    }
-
-    // MARK: - Private methods
-
-    /// TODO
-    private func getPersistedValue<T>(
+    func getPersistedValue<T>(
         valueType: T.Type,
         valueKey: String
     ) throws -> T {
@@ -287,7 +186,7 @@ public final class PersistentStorage {
     }
 
     /// TODO
-    private func log(
+    func log(
         message: String,
         for logLevel: LogLevel
     ) {
