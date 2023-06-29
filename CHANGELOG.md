@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0]
 
+### Added
+
+- Added Codable support
+
 ### Changed
 
 - Changed output type for method returning AnyPublisher<Bool, Never> to AnyPublisher<Void, PersistentStorageError>
