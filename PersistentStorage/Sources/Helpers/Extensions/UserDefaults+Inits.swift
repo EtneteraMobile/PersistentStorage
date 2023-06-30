@@ -6,9 +6,9 @@ extension UserDefaults {
         case .standard:
             self.init()
         case .authRelated:
-            self.init(suiteName: Bundle.main.bundleIdentifier ?? "" + "authRelated")
+            self.init(suiteName: "AuthRelated")
         case let .custom(name):
-            self.init(suiteName: Bundle.main.bundleIdentifier ?? "" + name)
+            self.init(suiteName: name)
         }
     }
 }
