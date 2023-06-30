@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed type of returned value from optional type to non-optional for read methods. Marked methods with optional return type as deprecated.
 - Version increased
 
+### Fixed
+
+- Removing value actually removes object for a given key
+
 ## [1.0.0]
 
 ### Added
