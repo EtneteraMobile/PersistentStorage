@@ -38,7 +38,7 @@ public protocol PersistentStorage: PersistentStorageCodable, PersistentStorageDe
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
     ///     - userDefaults: Type of UserDefaults to use
-    func readWithPublisher<T>(
+    func read<T>(
         valueType: T.Type,
         valueKey: String,
         userDefaults type: UserDefaultsType

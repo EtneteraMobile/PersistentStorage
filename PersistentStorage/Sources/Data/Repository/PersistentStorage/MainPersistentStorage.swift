@@ -77,7 +77,7 @@ public class MainPersistentStorage: PersistentStorage {
     /// - Parameters:
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
-    public func readWithPublisher<T>(
+    public func read<T>(
         valueType: T.Type,
         valueKey: String,
         userDefaults type: UserDefaultsType

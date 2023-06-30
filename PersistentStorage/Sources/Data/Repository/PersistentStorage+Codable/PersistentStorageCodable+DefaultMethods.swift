@@ -30,11 +30,11 @@ public extension PersistentStorageCodable {
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
     ///     - userDefaults: .standard
-    func readWithPublisher<T: Codable>(
+    func read<T: Codable>(
         valueType: T.Type,
         valueKey: String
     ) -> AnyPublisher<T, PersistentStorageError> {
-        readWithPublisher(
+        read(
             valueType: valueType,
             valueKey: valueKey,
             userDefaults: .standard
