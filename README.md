@@ -7,7 +7,7 @@ PersistentStorage is a Swift package that provides a simple of working with stor
 To use PersistentStorage in your project, add the following line to your `Package.swift` file:
 
 ```
-.package(url: "https://github.com/EtneteraMobile/PersistentStorage", .upToNextMajor(from: "1.0.0"))
+.package(url: "https://github.com/EtneteraMobile/PersistentStorage", .upToNextMajor(from: "2.0.0"))
 ```
 
 Then, include "PersistentStorage" as a dependency for your target:
