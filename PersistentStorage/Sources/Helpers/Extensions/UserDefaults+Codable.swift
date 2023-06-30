@@ -1,10 +1,3 @@
-//
-//  UserDefaults+Codable.swift
-//  
-//
-//  Created by antonin.simek on 30.06.2023.
-//
-
 import Foundation
 
 extension UserDefaults {
