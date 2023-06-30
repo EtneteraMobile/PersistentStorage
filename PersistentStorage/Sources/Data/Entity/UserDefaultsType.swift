@@ -10,9 +10,9 @@ public enum UserDefaultsType {
         case .standard:
             return nil
         case .authRelated:
-            return "authRelated"
+            return "AuthRelated_\(Bundle.main.bundleIdentifier ?? "")"
         case let .custom(name):
-            return "custom_\(name)"
+            return "Custom_\(name)_\(Bundle.main.bundleIdentifier ?? "")"
         }
     }
 }
