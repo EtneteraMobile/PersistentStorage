@@ -3,7 +3,7 @@ import Foundation
 extension UserDefaults {
     func codableSet<Element: Codable>(_ value: Element, forKey key: String) {
         let data = try? JSONEncoder().encode(value)
-        self.setValue(data, forKey: key)
+        self.set(data, forKey: key)
     }
 
     func codableValue<Element: Codable>(forKey key: String) -> Element? {
