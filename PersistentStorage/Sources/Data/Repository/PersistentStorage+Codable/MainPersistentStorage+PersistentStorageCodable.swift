@@ -18,12 +18,12 @@ extension MainPersistentStorage: PersistentStorageCodable {
             .map { [weak self] userDefaults in
                 if let persistedValue: T = userDefaults.codableValue(forKey: key) {
                     self?.log(
-                        message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} while persisting",
+                        message: "ℹ️ Rewritten original codable value {\(persistedValue)} for key {\(key)} in userDefaults {\(type)} while persisting",
                         for: .debug
                     )
                 }
                 self?.log(
-                    message: "✅ Successfully persisted value {\(String(describing: value))} for key {\(key)}",
+                    message: "✅ Successfully persisted codable value {\(String(describing: value))} for key {\(key)} in userDefaults {\(type)}",
                     for: .debug
                 )
 
@@ -57,13 +57,13 @@ extension MainPersistentStorage: PersistentStorageCodable {
                 guard let persistedValue: T = userDefaults.codableValue(forKey: valueKey) else {
                     if userDefaults.value(forKey: valueKey) != nil {
                         self?.log(
-                            message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
+                            message: "❌ Value with given key exists in userDefaults {\(type)}, but method is unable to parse the value with given codable type.",
                             for: .failure
                         )
                         return Fail(error: PersistentStorageError.noValueFoundWithGivenType).eraseToAnyPublisher()
                     } else {
                         self?.log(
-                            message: "ℹ️ Value with given key does not exist, returning `noValueFound` failure.",
+                            message: "ℹ️ Value with given key does not exist in userDefaults {\(type)}, returning `noValueFound` failure.",
                             for: .failure
                         )
                         return Fail(error: PersistentStorageError.noValueFound).eraseToAnyPublisher()
@@ -71,7 +71,7 @@ extension MainPersistentStorage: PersistentStorageCodable {
                 }
                 self?.log(
                     // swiftlint:disable:next line_length
-                    message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
+                    message: "✅ Successfully returned persisted codable value in userDefaults {\(type)} with key {\(valueKey)} and associated codable value {\(persistedValue)}",
                     for: .debug
                 )
                 return Just(persistedValue)

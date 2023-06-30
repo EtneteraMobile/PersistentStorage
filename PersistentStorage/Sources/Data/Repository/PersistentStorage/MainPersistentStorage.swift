@@ -28,12 +28,12 @@ public class MainPersistentStorage: PersistentStorage {
             .map { [weak self] userDefaults in
                 if let persistedValue = userDefaults.value(forKey: key) as? T {
                     self?.log(
-                        message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} while persisting",
+                        message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} in userDefaults {\(type)} while persisting",
                         for: .debug
                     )
                 }
                 self?.log(
-                    message: "✅ Successfully persisted value {\(String(describing: value))} for key {\(key)}",
+                    message: "✅ Successfully persisted value {\(String(describing: value))} for key {\(key)} in userDefaults {\(type)}",
                     for: .debug
                 )
 
@@ -60,7 +60,7 @@ public class MainPersistentStorage: PersistentStorage {
             .map { [weak self] userDefaults in
                 userDefaults.removeObject(forKey: valueKey)
                 self?.log(
-                    message: "✅ Successfully removed value with key {\(valueKey)}",
+                    message: "✅ Successfully removed value with key {\(valueKey)} in userDefaults {\(type)}",
                     for: .debug
                 )
                 // This operation is always successful
@@ -87,13 +87,13 @@ public class MainPersistentStorage: PersistentStorage {
                 guard let persistedValue = userDefaults.value(forKey: valueKey) as? T else {
                     if userDefaults.value(forKey: valueKey) != nil {
                         self?.log(
-                            message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
+                            message: "❌ Value with given key exists in userDefaults {\(type)}, but method is unable to parse the value with given type.",
                             for: .failure
                         )
                         return Fail(error: PersistentStorageError.noValueFoundWithGivenType).eraseToAnyPublisher()
                     } else {
                         self?.log(
-                            message: "ℹ️ Value with given key does not exist, returning `noValueFound` failure.",
+                            message: "ℹ️ Value with given key does not exist in userDefaults {\(type)}, returning `noValueFound` failure.",
                             for: .failure
                         )
                         return Fail(error: PersistentStorageError.noValueFound).eraseToAnyPublisher()
@@ -101,7 +101,7 @@ public class MainPersistentStorage: PersistentStorage {
                 }
                 self?.log(
                     // swiftlint:disable:next line_length
-                    message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
+                    message: "✅ Successfully returned persisted value in userDefaults {\(type)} with key {\(valueKey)} and associated value {\(persistedValue)}",
                     for: .debug
                 )
                 return Just(persistedValue)
@@ -129,7 +129,7 @@ public class MainPersistentStorage: PersistentStorage {
                     .handleEvents(
                         receiveOutput: { [weak self] value in
                             self?.log(
-                                message: "✅ Observing value {\(String(describing: value))}.",
+                                message: "✅ Observing value {\(String(describing: value))} in userDefaults {\(type)}",
                                 for: .debug
                             )
                         }
