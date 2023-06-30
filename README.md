@@ -27,7 +27,7 @@ First register the `PersistentStorage` into your container:
 
 ```
 container.register(PersistentStorage.self) { _ in
-    PersistentStorage(logConfiguration: ...)
+    MainPersistentStorage(logConfiguration: ...)
 }
 ```
 
