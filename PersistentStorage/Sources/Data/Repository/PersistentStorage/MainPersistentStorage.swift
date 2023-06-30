@@ -2,7 +2,6 @@ import Combine
 import Foundation
 
 public class MainPersistentStorage: PersistentStorage {
-    let userDefaults = UserDefaults.standard
     private let logConfiguration: LogConfiguration
 
     /// Initialization of `PersistentStorage`
@@ -22,26 +21,29 @@ public class MainPersistentStorage: PersistentStorage {
     @discardableResult
     public func store<T>(
         _ value: T?,
-        for key: String
+        for key: String,
+        userDefaults type: UserDefaultsType
     ) -> AnyPublisher<Void, PersistentStorageError> {
-        if let persistedValue = userDefaults.value(forKey: key) as? T {
-            log(
-                message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} while persisting",
-                for: .debug
-            )
-        }
-        log(
-            message: "✅ Successfully persisted value {\(String(describing: value))} for key {\(key)}",
-            for: .debug
-        )
+        userDefaults(for: type)
+            .map { [weak self] userDefaults in
+                if let persistedValue = userDefaults.value(forKey: key) as? T {
+                    self?.log(
+                        message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} while persisting",
+                        for: .debug
+                    )
+                }
+                self?.log(
+                    message: "✅ Successfully persisted value {\(String(describing: value))} for key {\(key)}",
+                    for: .debug
+                )
 
-        userDefaults.set(
-            value,
-            forKey: key
-        )
-        // This operation is always successful
-        return Just(())
-            .setFailureType(to: PersistentStorageError.self)
+                userDefaults.set(
+                    value,
+                    forKey: key
+                )
+                // This operation is always successful
+                return ()
+            }
             .eraseToAnyPublisher()
     }
 
@@ -51,19 +53,21 @@ public class MainPersistentStorage: PersistentStorage {
     ///     - key: Key that will be assigned to value
     @discardableResult
     public func remove(
-        valueKey: String
+        valueKey: String,
+        userDefaults type: UserDefaultsType
     ) -> AnyPublisher<Void, PersistentStorageError> {
-        userDefaults.removeObject(forKey: valueKey)
-        log(
-            message: "✅ Successfully removed value with key {\(valueKey)}",
-            for: .debug
-        )
-        // This operation is always successful
-        return Just(())
-            .setFailureType(to: PersistentStorageError.self)
+        userDefaults(for: type)
+            .map { [weak self] userDefaults in
+                userDefaults.removeObject(forKey: valueKey)
+                self?.log(
+                    message: "✅ Successfully removed value with key {\(valueKey)}",
+                    for: .debug
+                )
+                // This operation is always successful
+                return ()
+            }
             .eraseToAnyPublisher()
     }
-
     /// Method for reading a value with given key and type. Result is returned as a publisher.
     ///
     /// - Possible failures:
@@ -75,29 +79,36 @@ public class MainPersistentStorage: PersistentStorage {
     ///     - valueKey: Key that is assigned to a value that you wish to read.
     public func readWithPublisher<T>(
         valueType: T.Type,
-        valueKey: String
+        valueKey: String,
+        userDefaults type: UserDefaultsType
     ) -> AnyPublisher<T, PersistentStorageError> {
-        do {
-            let persistedValue = try getPersistedValue(
-                valueType: valueType,
-                valueKey: valueKey
-            )
-            return Just(
-                persistedValue
-            )
-            .setFailureType(to: PersistentStorageError.self)
-            .eraseToAnyPublisher()
-        } catch {
-            guard let error = error as? PersistentStorageError else {
-                return Fail(
-                    error: PersistentStorageError.undefined
-                ).eraseToAnyPublisher()
+        userDefaults(for: type)
+            .flatMap { [weak self] userDefaults -> AnyPublisher<T, PersistentStorageError> in
+                guard let persistedValue = userDefaults.value(forKey: valueKey) as? T else {
+                    if userDefaults.value(forKey: valueKey) != nil {
+                        self?.log(
+                            message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
+                            for: .failure
+                        )
+                        return Fail(error: PersistentStorageError.noValueFoundWithGivenType).eraseToAnyPublisher()
+                    } else {
+                        self?.log(
+                            message: "ℹ️ Value with given key does not exist, returning `noValueFound` failure.",
+                            for: .failure
+                        )
+                        return Fail(error: PersistentStorageError.noValueFound).eraseToAnyPublisher()
+                    }
+                }
+                self?.log(
+                    // swiftlint:disable:next line_length
+                    message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
+                    for: .debug
+                )
+                return Just(persistedValue)
+                    .setFailureType(to: PersistentStorageError.self)
+                    .eraseToAnyPublisher()
             }
-            return Fail(
-                error: error
-            )
             .eraseToAnyPublisher()
-        }
     }
 
     /// Method for observing a value with given user defaults `KeyPath`.
@@ -108,24 +119,29 @@ public class MainPersistentStorage: PersistentStorage {
     /// - Parameters:
     ///     - keyPath: Specified key represented by user defaults `KeyPath` value.
     public func observe<T>(
-        keyPath: KeyPath<UserDefaults, T?>
+        keyPath: KeyPath<UserDefaults, T?>,
+        userDefaults type: UserDefaultsType
     ) -> AnyPublisher<T, PersistentStorageError> {
-        userDefaults
-            .publisher(for: keyPath)
-            .handleEvents(
-                receiveOutput: { [weak self] value in
-                    self?.log(
-                        message: "✅ Observing value {\(String(describing: value))}.",
-                        for: .debug
+        userDefaults(for: type)
+            .flatMap { userDefaults in
+                userDefaults
+                    .publisher(for: keyPath)
+                    .handleEvents(
+                        receiveOutput: { [weak self] value in
+                            self?.log(
+                                message: "✅ Observing value {\(String(describing: value))}.",
+                                for: .debug
+                            )
+                        }
                     )
-                }
-            )
-            .flatMap { observedValue -> AnyPublisher<T, PersistentStorageError> in
-                guard let observedValue else {
-                    return Fail(error: .noValueFound).eraseToAnyPublisher()
-                }
-                return Just(observedValue)
-                    .setFailureType(to: PersistentStorageError.self)
+                    .flatMap { observedValue -> AnyPublisher<T, PersistentStorageError> in
+                        guard let observedValue else {
+                            return Fail(error: .noValueFound).eraseToAnyPublisher()
+                        }
+                        return Just(observedValue)
+                            .setFailureType(to: PersistentStorageError.self)
+                            .eraseToAnyPublisher()
+                    }
                     .eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
@@ -133,32 +149,14 @@ public class MainPersistentStorage: PersistentStorage {
 
     // MARK: - Internal methods
 
-    /// TODO
-    func getPersistedValue<T>(
-        valueType: T.Type,
-        valueKey: String
-    ) throws -> T {
-        guard let persistedValue = userDefaults.value(forKey: valueKey) as? T else {
-            if userDefaults.value(forKey: valueKey) != nil {
-                log(
-                    message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
-                    for: .failure
-                )
-                throw PersistentStorageError.noValueFoundWithGivenType
-            } else {
-                log(
-                    message: "ℹ️ Value with given key does not exist, returning `noValueFound` failure.",
-                    for: .failure
-                )
-                throw PersistentStorageError.noValueFound
-            }
+    func userDefaults(for type: UserDefaultsType) -> AnyPublisher<UserDefaults, PersistentStorageError> {
+        guard let userDefaults = UserDefaults(type: type) else {
+            return Fail(error: PersistentStorageError.cannotCreateUserDefaults).eraseToAnyPublisher()
         }
-        log(
-            // swiftlint:disable:next line_length
-            message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
-            for: .debug
-        )
-        return persistedValue
+
+        return Just(userDefaults)
+            .setFailureType(to: PersistentStorageError.self)
+            .eraseToAnyPublisher()
     }
 
     /// TODO

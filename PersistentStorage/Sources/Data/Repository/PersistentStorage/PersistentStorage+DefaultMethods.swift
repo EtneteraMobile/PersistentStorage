@@ -1,32 +1,39 @@
 import Combine
 import Foundation
 
-/// The `PersistentStorage` protocol wraps Apple native `UserDefaults` class and  provides a custom
-/// programmatic interface for complex accessing user defaults database.
-public protocol PersistentStorage: PersistentStorageCodable, PersistentStorageDeprecated {
+public extension PersistentStorage {
     /// Method for storing a value with assigned key into the user defaults storage.
     ///
     /// - Parameters:
     ///     - value: The value you want to store in
     ///     - key: Key that will be assigned to value
-    ///     - userDefaults: Type of UserDefaults to use
+    ///     - userDefaults: .standard
     @discardableResult
     func store<T>(
         _ value: T?,
-        for key: String,
-        userDefaults type: UserDefaultsType
-    ) -> AnyPublisher<Void, PersistentStorageError>
+        for key: String
+    ) -> AnyPublisher<Void, PersistentStorageError> {
+        store(
+            value,
+            for: key,
+            userDefaults: .standard
+        )
+    }
 
     /// Method for removing a value with assigned key from the user defaults storage.
     ///
     /// - Parameters:
     ///     - key: Key that will be assigned to value
-    ///     - userDefaults: Type of UserDefaults to use
+    ///     - userDefaults: .standard
     @discardableResult
     func remove(
-        valueKey: String,
-        userDefaults type: UserDefaultsType
-    ) -> AnyPublisher<Void, PersistentStorageError>
+        valueKey: String
+    ) -> AnyPublisher<Void, PersistentStorageError> {
+        remove(
+            valueKey: valueKey,
+            userDefaults: .standard
+        )
+    }
 
     /// Method for reading a value with given key and type. Result is returned as a publisher.
     ///
@@ -37,12 +44,17 @@ public protocol PersistentStorage: PersistentStorageCodable, PersistentStorageDe
     /// - Parameters:
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
-    ///     - userDefaults: Type of UserDefaults to use
+    ///     - userDefaults: .standard
     func readWithPublisher<T>(
         valueType: T.Type,
-        valueKey: String,
-        userDefaults type: UserDefaultsType
-    ) -> AnyPublisher<T, PersistentStorageError>
+        valueKey: String
+    ) -> AnyPublisher<T, PersistentStorageError> {
+        readWithPublisher(
+            valueType: valueType,
+            valueKey: valueKey,
+            userDefaults: .standard
+        )
+    }
 
     /// Method for observing a value with given user defaults `KeyPath`.
     ///
@@ -51,9 +63,13 @@ public protocol PersistentStorage: PersistentStorageCodable, PersistentStorageDe
     ///
     /// - Parameters:
     ///     - keyPath: Specified key represented by user defaults `KeyPath` value.
-    ///     - userDefaults: Type of UserDefaults to use
+    ///     - userDefaults: .standard
     func observe<T>(
-        keyPath: KeyPath<UserDefaults, T?>,
-        userDefaults type: UserDefaultsType
-    ) -> AnyPublisher<T, PersistentStorageError>
+        keyPath: KeyPath<UserDefaults, T?>
+    ) -> AnyPublisher<T, PersistentStorageError> {
+        observe(
+            keyPath: keyPath,
+            userDefaults: .standard
+        )
+    }
 }

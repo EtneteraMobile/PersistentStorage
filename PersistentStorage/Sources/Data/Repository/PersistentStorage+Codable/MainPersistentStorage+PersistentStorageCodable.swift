@@ -7,29 +7,33 @@ extension MainPersistentStorage: PersistentStorageCodable {
     /// - Parameters:
     ///     - value: The value you want to store in
     ///     - key: Key that will be assigned to value
+    ///     - userDefaults: Type of UserDefaults to use
     @discardableResult
     public func store<T: Codable>(
         _ value: T?,
-        for key: String
+        for key: String,
+        userDefaults type: UserDefaultsType
     ) -> AnyPublisher<Void, PersistentStorageError> {
-        if let persistedValue: T = userDefaults.codableValue(forKey: key) {
-            log(
-                message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} while persisting",
-                for: .debug
-            )
-        }
-        log(
-            message: "✅ Successfully persisted value {\(String(describing: value))} for key {\(key)}",
-            for: .debug
-        )
+        userDefaults(for: type)
+            .map { [weak self] userDefaults in
+                if let persistedValue: T = userDefaults.codableValue(forKey: key) {
+                    self?.log(
+                        message: "ℹ️ Rewritten original value {\(persistedValue)} for key {\(key)} while persisting",
+                        for: .debug
+                    )
+                }
+                self?.log(
+                    message: "✅ Successfully persisted value {\(String(describing: value))} for key {\(key)}",
+                    for: .debug
+                )
 
-        userDefaults.codableSet(
-            value,
-            forKey: key
-        )
-        // This operation is always successful
-        return Just(())
-            .setFailureType(to: PersistentStorageError.self)
+                userDefaults.codableSet(
+                    value,
+                    forKey: key
+                )
+                // This operation is always successful
+                return ()
+            }
             .eraseToAnyPublisher()
     }
 
@@ -42,54 +46,38 @@ extension MainPersistentStorage: PersistentStorageCodable {
     /// - Parameters:
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
+    ///     - userDefaults: Type of UserDefaults to use
     public func readWithPublisher<T: Codable>(
         valueType: T.Type,
-        valueKey: String
+        valueKey: String,
+        userDefaults type: UserDefaultsType
     ) -> AnyPublisher<T, PersistentStorageError> {
-        do {
-            let persistedValue = try getCodablePersistedValue(
-                valueType: valueType,
-                valueKey: valueKey
-            )
-
-            return Just(persistedValue)
-                .setFailureType(to: PersistentStorageError.self)
-                .eraseToAnyPublisher()
-        } catch {
-            guard let error = error as? PersistentStorageError else {
-                return Fail(error: PersistentStorageError.undefined)
+        userDefaults(for: type)
+            .flatMap { [weak self] userDefaults -> AnyPublisher<T, PersistentStorageError> in
+                guard let persistedValue: T = userDefaults.codableValue(forKey: valueKey) else {
+                    if userDefaults.value(forKey: valueKey) != nil {
+                        self?.log(
+                            message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
+                            for: .failure
+                        )
+                        return Fail(error: PersistentStorageError.noValueFoundWithGivenType).eraseToAnyPublisher()
+                    } else {
+                        self?.log(
+                            message: "ℹ️ Value with given key does not exist, returning `noValueFound` failure.",
+                            for: .failure
+                        )
+                        return Fail(error: PersistentStorageError.noValueFound).eraseToAnyPublisher()
+                    }
+                }
+                self?.log(
+                    // swiftlint:disable:next line_length
+                    message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
+                    for: .debug
+                )
+                return Just(persistedValue)
+                    .setFailureType(to: PersistentStorageError.self)
                     .eraseToAnyPublisher()
             }
-
-            return Fail(error: error)
-                .eraseToAnyPublisher()
-        }
-    }
-
-    private func getCodablePersistedValue<T: Codable>(
-        valueType: T.Type,
-        valueKey: String
-    ) throws -> T {
-        guard let persistedValue: T = userDefaults.codableValue(forKey: valueKey) else {
-            if userDefaults.value(forKey: valueKey) != nil {
-                log(
-                    message: "❌ Value with given key exists, but method is unable to parse the value with given type.",
-                    for: .failure
-                )
-                throw PersistentStorageError.noValueFoundWithGivenType
-            } else {
-                log(
-                    message: "ℹ️ Value with given key does not exist, returning `noValueFound` failure.",
-                    for: .failure
-                )
-                throw PersistentStorageError.noValueFound
-            }
-        }
-        log(
-            // swiftlint:disable:next line_length
-            message: "✅ Successfully returned persisted value with key {\(valueKey)} and associated value {\(persistedValue)}",
-            for: .debug
-        )
-        return persistedValue
+            .eraseToAnyPublisher()
     }
 }
