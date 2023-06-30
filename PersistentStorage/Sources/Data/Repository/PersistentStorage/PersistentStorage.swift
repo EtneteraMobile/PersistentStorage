@@ -17,6 +17,15 @@ public protocol PersistentStorage: PersistentStorageCodable, PersistentStorageDe
         userDefaults type: UserDefaultsType
     ) -> AnyPublisher<Void, PersistentStorageError>
 
+    /// Method for removing all key pairs in the specified userDefaults type.
+    ///
+    /// - Parameters:
+    ///     - userDefaults: Type of UserDefaults to use
+    @discardableResult
+    func removeAll(
+        forUserDefaults type: UserDefaultsType
+    ) -> AnyPublisher<Void, PersistentStorageError>
+
     /// Method for removing a value with assigned key from the user defaults storage.
     ///
     /// - Parameters:

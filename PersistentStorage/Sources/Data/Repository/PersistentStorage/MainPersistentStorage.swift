@@ -43,6 +43,22 @@ public class MainPersistentStorage: PersistentStorage {
     }
 
     @discardableResult
+    public func removeAll(
+        forUserDefaults type: UserDefaultsType
+    ) -> AnyPublisher<Void, PersistentStorageError> {
+        userDefaults(for: type)
+            .map { userDefaults in
+                let dictionary = userDefaults.dictionaryRepresentation()
+                dictionary.keys.forEach { key in
+                    userDefaults.removeObject(forKey: key)
+                }
+                // This operation is always successful
+                return ()
+            }
+            .eraseToAnyPublisher()
+    }
+
+    @discardableResult
     public func remove(
         valueKey: String,
         userDefaults type: UserDefaultsType
