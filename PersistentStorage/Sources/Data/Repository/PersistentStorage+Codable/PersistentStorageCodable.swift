@@ -9,7 +9,7 @@ public protocol PersistentStorageCodable {
     ///     - key: Key that will be assigned to value
     ///     - userDefaults: Type of UserDefaults to use
     @discardableResult
-    func store<T: Codable>(
+    func storeCodable<T: Codable>(
         _ value: T?,
         for key: String,
         userDefaults type: UserDefaultsType
@@ -25,7 +25,7 @@ public protocol PersistentStorageCodable {
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
     ///     - userDefaults: Type of UserDefaults to use
-    func read<T: Codable>(
+    func readCodable<T: Codable>(
         valueType: T.Type,
         valueKey: String,
         userDefaults type: UserDefaultsType

@@ -9,11 +9,11 @@ public extension PersistentStorageCodable {
     ///     - key: Key that will be assigned to value
     ///     - userDefaults: .standard
     @discardableResult
-    func store<T: Codable>(
+    func storeCodable<T: Codable>(
         _ value: T?,
         for key: String
     ) -> AnyPublisher<Void, PersistentStorageError> {
-        store(
+        storeCodable(
             value,
             for: key,
             userDefaults: .standard
@@ -30,11 +30,11 @@ public extension PersistentStorageCodable {
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
     ///     - userDefaults: .standard
-    func read<T: Codable>(
+    func readCodable<T: Codable>(
         valueType: T.Type,
         valueKey: String
     ) -> AnyPublisher<T, PersistentStorageError> {
-        read(
+        readCodable(
             valueType: valueType,
             valueKey: valueKey,
             userDefaults: .standard

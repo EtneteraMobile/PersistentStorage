@@ -34,7 +34,7 @@ public extension PersistentStorageDeprecated {
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
     ///     - userDefaults: .standard
-    @available(*, deprecated, message: "This will be removed in 3.0.0. This method was renamed.", renamed: "read")
+    @available(*, deprecated, message: "This will be removed in 3.0.0. This method was renamed.", renamed: "readCodable")
     func readWithPublisher<T: Codable>(
         valueType: T.Type,
         valueKey: String
@@ -75,7 +75,7 @@ public protocol PersistentStorageDeprecated {
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
     ///     - userDefaults: Type of UserDefaults to use
-    @available(*, deprecated, message: "This will be removed in 3.0.0. This method was renamed.", renamed: "read")
+    @available(*, deprecated, message: "This will be removed in 3.0.0. This method was renamed.", renamed: "readCodable")
     func readWithPublisher<T: Codable>(
         valueType: T.Type,
         valueKey: String,
