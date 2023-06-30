@@ -2,7 +2,7 @@ import Combine
 import Foundation
 
 // MARK: - Deprecated methods
-extension PersistentStorage {
+extension MainPersistentStorage: PersistentStorageDeprecated {
     // MARK: - Remove in 2.0.0
 
     /// Method for removing a value with assigned key from the user defaults storage.
@@ -32,7 +32,8 @@ extension PersistentStorage {
     ///     - value: The value you want to store in
     ///     - key: Key that will be assigned to value
     @available(*, deprecated, message: "This will be removed in 2.0.0. Use the store method that returns AnyPublisher<Void, PersistentStorageError>")
-    @discardableResult public func store<T>(
+    @discardableResult
+    public func store<T>(
         _ value: T?,
         for key: String
     ) -> AnyPublisher<Bool, Never> {

@@ -1,10 +1,7 @@
-import Foundation
 import Combine
+import Foundation
 
-/// The `PersistentStorage` class wraps apple native `UserDefaults` class and  provides a custom
-/// programmatic interface for complex accessing user defaults database.
-public class PersistentStorage {
-
+public class MainPersistentStorage: PersistentStorage {
     let userDefaults = UserDefaults.standard
     private let logConfiguration: LogConfiguration
 
@@ -22,7 +19,8 @@ public class PersistentStorage {
     /// - Parameters:
     ///     - value: The value you want to store in
     ///     - key: Key that will be assigned to value
-    @discardableResult public func store<T>(
+    @discardableResult
+    public func store<T>(
         _ value: T?,
         for key: String
     ) -> AnyPublisher<Void, PersistentStorageError> {

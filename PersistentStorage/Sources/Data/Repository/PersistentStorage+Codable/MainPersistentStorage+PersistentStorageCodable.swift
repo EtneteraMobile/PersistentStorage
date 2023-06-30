@@ -1,14 +1,14 @@
 import Combine
 import Foundation
 
-public extension PersistentStorage {
+extension MainPersistentStorage: PersistentStorageCodable {
     /// Method for storing a codable value with assigned key into the user defaults storage.
     ///
     /// - Parameters:
     ///     - value: The value you want to store in
     ///     - key: Key that will be assigned to value
     @discardableResult
-    func store<T: Codable>(
+    public func store<T: Codable>(
         _ value: T?,
         for key: String
     ) -> AnyPublisher<Void, PersistentStorageError> {
@@ -42,7 +42,7 @@ public extension PersistentStorage {
     /// - Parameters:
     ///     - valueType: The type of value that you wish to read.
     ///     - valueKey: Key that is assigned to a value that you wish to read.
-    func readWithPublisher<T: Codable>(
+    public func readWithPublisher<T: Codable>(
         valueType: T.Type,
         valueKey: String
     ) -> AnyPublisher<T, PersistentStorageError> {
