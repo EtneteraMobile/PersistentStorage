@@ -14,10 +14,7 @@ extension MainPersistentStorage: PersistentStorageDeprecated {
     public func remove(
         valueKey: String
     ) -> AnyPublisher<Bool, Never> {
-        userDefaults.set(
-            nil,
-            forKey: valueKey
-        )
+        userDefaults.removeObject(forKey: valueKey)
         log(
             message: "✅ Successfully removed value with key {\(valueKey)}",
             for: .debug

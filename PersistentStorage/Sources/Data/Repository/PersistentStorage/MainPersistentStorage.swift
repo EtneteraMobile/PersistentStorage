@@ -53,10 +53,7 @@ public class MainPersistentStorage: PersistentStorage {
     public func remove(
         valueKey: String
     ) -> AnyPublisher<Void, PersistentStorageError> {
-        userDefaults.set(
-            nil,
-            forKey: valueKey
-        )
+        userDefaults.removeObject(forKey: valueKey)
         log(
             message: "✅ Successfully removed value with key {\(valueKey)}",
             for: .debug
